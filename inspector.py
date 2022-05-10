@@ -1,5 +1,6 @@
 import numpy as np
 import cv2
+import math
 
 filename = "sample.vpt"
 
@@ -15,7 +16,13 @@ byte = True
 
 i_x, i_y, i_z = 0, 0, 0
 
+def getRandomColor(maxv):
+    high = maxv+maxv*math.log(maxv)+1
+    low = maxv-maxv*math.log(maxv)
+    rand = np.random.randint(max(0,low), high=min(255,high), size=(3), dtype=np.uint8)
+    return rand
 
+"""
 transferFunction = {
     32: [0, 0, 0],
     64: [128, 0, 0],
@@ -26,6 +33,25 @@ transferFunction = {
     224: [0, 0, 255],
     256: [255, 255, 255],
 }
+"""
+
+print(getRandomColor(256))
+
+"""
+transferFunction = {
+    32: getRandomColor(32),
+    64: getRandomColor(64),
+    92: getRandomColor(92),
+    128: getRandomColor(128),
+    160: getRandomColor(160),
+    192: getRandomColor(192),
+    224: getRandomColor(224),
+    256: getRandomColor(256)
+}
+"""
+transferFunction = {}
+for val in range(1, 255):
+    transferFunction[val] = getRandomColor(val)
 
 while byte:
     byte = file.read(typeBytes)
@@ -38,7 +64,6 @@ while byte:
     if i_x == dimensions[0]:
         i_y += 1
         i_x = 0
-        print(f"{i_x} {i_y} {i_z}")
         
     if i_y == dimensions[1]:
         i_z += 1
@@ -56,6 +81,7 @@ for i in range(dimensions[2]):
         for iy in range(dimensions[1]):
             voxel = zlayer[ix, iy]
             for key, value in transferFunction.items():
+
                 if voxel < key:
                     image[ix, iy, :] = value
                     break
