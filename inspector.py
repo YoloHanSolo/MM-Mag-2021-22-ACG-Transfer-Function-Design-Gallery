@@ -10,6 +10,8 @@ class TransferFunctionGenerator:
         self.dimensions = dimensions
         self.volume = None
         self.transfer_function = None
+        self.histogram = None
+        self.mean_z = None
         
     def loadRawVolume(self):
         volume = np.fromfile(self.path, dtype=np.uint8)
@@ -27,6 +29,10 @@ class TransferFunctionGenerator:
         return np.random.randint(0, 255, (3), dtype=np.uint8)
 
     def getRgbRange(self, min_val=0, max_val=255):
+        if max_val == 0:
+            max_val = 1
+        if min_val >= max_val:
+            min_val = max_val-1
         return np.random.randint(
             max(min_val, 0),
             min(max_val, 255),
@@ -40,14 +46,14 @@ class TransferFunctionGenerator:
                 transfer_function[each] = color 
         return transfer_function   
 
-    def generateHistogramTF(self, histogram):
+    def generateHistogramTF(self):
         transfer_function = {}
-        for index in range(len(histogram)-1):
-            min_val = histogram[index]
-            max_val = histogram[index+1]
-            for value in range(min_val, max_val):
-                transfer_function[value] = [histogram[index], histogram[index], histogram[index]]
-        transfer_function[255] = [255, 255, 255]
+        for index in range(len(self.histogram)-1):
+            min_val = min(self.histogram[index], self.histogram[index+1])
+            max_val = max(self.histogram[index], self.histogram[index+1])
+            color = self.getRgbRange(min_val, max_val)
+            for value in range(min_val, max_val+1):
+                transfer_function[value] = color
         return transfer_function
 
     def generateRandomTF(self):
@@ -67,19 +73,19 @@ class TransferFunctionGenerator:
             cv2.imshow("z-layer", image)
             cv2.waitKey(1)
 
-    def getHistogram2D(self):
+    def getHistogram2D(self, bins):
         mean_z = np.mean(self.volume, axis=2).astype(np.uint8)
-        cv2.imshow("z-mean", mean_z)
-        cv2.waitKey(1)
-        histogram, edges = np.histogram(mean_z, bins=12)
+        self.mean_z = mean_z
+        histogram, edges = np.histogram(mean_z, bins=bins)
         histogram = np.log(histogram)
         density = np.sum(histogram) / histogram
         density = (density - np.min(density)) / (np.max(density) - np.min(density))
         density = (density * 255).astype(np.uint8)
-        print(edges)
-        print(histogram)
-        print(density)
         return density
+
+    def showMeanZ(self):
+        cv2.imshow("z-mean", self.mean_z)
+        cv2.waitKey(1)
 
 filename = "raw/body_512x512x226_1x1x1_uint8.raw"
 filename = "raw/engine_256x256x256_1x1x1_uint8.raw"
@@ -89,11 +95,11 @@ TFG = TransferFunctionGenerator(filename)
 TFG.dimensions = TFG.readDimensions()
 TFG.volume = TFG.loadRawVolume()
 TFG.transfer_function = TFG.generateRandomTF()
+TFG.histogram = TFG.getHistogram2D(25)
 
-histogram = TFG.getHistogram2D()
+TFG.transfer_function = TFG.generateHistogramTF()
 
-TFG.transfer_function = TFG.generateHistogramTF(histogram)
-
+TFG.showMeanZ()
 TFG.renderZ()    
 
 
