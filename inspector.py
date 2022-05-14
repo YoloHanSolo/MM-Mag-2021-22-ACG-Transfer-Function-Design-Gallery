@@ -224,7 +224,13 @@ for tf in range(9):
     TFG.get1DTransferFunction(display=False)
     TFG.saveTransferFunctionVPT(name="transfer_function_{}".format(tf))
     bins = bins + 2
+
 #TFG.generatePreview()
 #TFG.renderZ()
 
 
+"""
+bins
+dropout 
+power?
+"""
