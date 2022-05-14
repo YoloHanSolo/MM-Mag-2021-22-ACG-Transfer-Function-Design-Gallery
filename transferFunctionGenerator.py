@@ -1,35 +1,38 @@
 import numpy as np
 import random
-import json
 import cv2
+
 
 class TransferFunctionGenerator:
 
-    # BINS -> 3 - 30
-    # DROPOUT -> 0.0 - 0.3
-    # POWER -> 2 - 10
+    def __init__(self, 
+        max_opacity = 0.3,
+        min_value = 100):
 
-    def __init__(self, max_opacity=0.3, min_value=100) -> None:
         self.max_opacity = max_opacity
         self.min_value = min_value
 
-        self.bins = None
-        self.dropout = None
-        self.power = None
+        self.bins = None  # range 3 -> 30
+        self.dropout = None  # range 0.0 -> 0.3
+        self.power = None  # power 2 -> 10
         self.feature_vector = None
 
-    def generateFeature(self):
-        pass
+    def generateInitialTransferFunctions(self):
+        data = []
+        for bins in range(3, 33, 3):
+            data.append(
+                self.generateRandomTransferFunction(bins))
+        return data
 
-    def generateRandom(self, tf_index, bins):
+    def generateRandomTransferFunction(self, bins):
         self.bins = bins 
         self.dropout = random.uniform(0.0, 0.3)
         self.power = random.randint(1, 5) * 2
 
-        self.feature_vector = np.array([
+        self.feature_vector = [
             self.bins,
             self.dropout,
-            self.power])
+            self.power]
 
         transfer_function = {}
 
@@ -37,17 +40,14 @@ class TransferFunctionGenerator:
         for bin_index in range(self.bins):
             edge_min = int(step * bin_index)
             edge_max = int(step * (bin_index + 1))
-
             x = (edge_min + edge_max) / 2
-
+            # COLOR 
             rgb = self.HSV2RGB(
                 self._getHue(), 
                 self._getSaturation(), 
                 self._getValue(x))
             alpha = self._getOpacity(x, bin_index)
-
-            print(self._getOpacity(x, bin_index))
-
+            # TF BIN
             transfer_function[bin_index] = {
                 "edge_min": edge_min,
                 "edge_max": edge_max,
@@ -67,10 +67,13 @@ class TransferFunctionGenerator:
                 vpt_bump = self._VPTform(position, size, color, opacity)
                 vpt_tf_json.append(vpt_bump)          
 
-        with open("tf_{}.json".format(tf_index), 'w') as file:
-            json.dump(vpt_tf_json, file)   
+        tf = {
+            "feature": self.feature_vector,
+            "transfer_function": vpt_tf_json
+        }
 
-        print("{}: [{}, {}, {}]".format(tf_index, self.bins, self.dropout, self.power))
+        return tf
+        
 
     def _VPTform(self, position, size, color, opacity):
         form = {
@@ -105,10 +108,3 @@ class TransferFunctionGenerator:
         elif bin_index == 0 or x <= 0.05: # IGNORE BACKGROUND NOISE
             return 0
         return min(fx, self.max_opacity * 255) 
-
-TFG = TransferFunctionGenerator()
-
-bins = 3
-for tf_index in range(9):
-    TFG.generate(tf_index, bins)
-    bins += 3
