@@ -1,6 +1,6 @@
 # Transfer Function Design Gallery
 
-This project is part of course Advanced Computer Grpahics, Faculty of Computer and Information Science of the University of Ljubljana, May 2022.
+This project is part of course Advanced Computer Graphics, Faculty of Computer and Information Science of the University of Ljubljana, May 2022.
 
 Author: Jan Pelicon
 
@@ -25,7 +25,7 @@ Design Galleries: A General Approach to Setting Parameters for Computer Graphics
 
 ## Implementation
 
-A design gallery is implemented as an extension in [VPT: The Volumetric Path Tracing Framework](https://github.com/terier/vpt). A backend is written in python using flask.
+A design gallery is implemented as an extension to [VPT: The Volumetric Path Tracing Framework](https://github.com/terier/vpt). A backend is written in python using flask.
 
 ## Building and running
 
