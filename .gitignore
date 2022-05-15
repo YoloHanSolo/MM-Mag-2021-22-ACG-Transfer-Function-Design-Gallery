@@ -1,3 +1,4 @@
 vpt
 raw
 *.pyc
+temp/*.png

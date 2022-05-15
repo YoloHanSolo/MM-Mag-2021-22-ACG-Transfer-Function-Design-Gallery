@@ -2,29 +2,30 @@ import numpy as np
 import random
 import cv2
 
-
 class TransferFunctionGenerator:
 
-    def __init__(self, 
-        max_opacity = 0.3,
-        min_value = 100):
-
+    def __init__(self, filename, max_opacity = 0.3, min_value = 100):
+        self.path = "raw/" + filename
         self.max_opacity = max_opacity
         self.min_value = min_value
 
         self.bins = None  # range 3 -> 30
         self.dropout = None  # range 0.0 -> 0.3
         self.power = None  # power 2 -> 10
-        self.feature_vector = None
+        self.feature_vector = None    
 
     def generateInitialTransferFunctions(self):
+        seeds = []
+        for _ in range(9):
+            seeds.append(random.randint(0, 255))
         data = []
-        for bins in range(3, 33, 3):
+        for index, bins in enumerate(range(3, 30, 3)):   
             data.append(
-                self.generateRandomTransferFunction(bins))
+                self.generateRandomTransferFunction(bins, seeds[index]))
         return data
 
-    def generateRandomTransferFunction(self, bins):
+    def generateRandomTransferFunction(self, bins, seed):
+        random.seed(seed)
         self.bins = bins 
         self.dropout = random.uniform(0.0, 0.3)
         self.power = random.randint(1, 5) * 2
@@ -108,3 +109,27 @@ class TransferFunctionGenerator:
         elif bin_index == 0 or x <= 0.05: # IGNORE BACKGROUND NOISE
             return 0
         return min(fx, self.max_opacity * 255) 
+
+    def generateTransferFunctionsPreview(self, data):
+        dimensions_string = self.path.split("_")[-3]
+        dimensions = tuple(map(int, dimensions_string.split("x")))
+        volume = np.fromfile(self.path, dtype=np.uint8)
+        volume = np.reshape(volume, dimensions[::-1])
+        volume = np.moveaxis(volume, [0, 2], [2, 0])
+        slice = volume[:, :, dimensions[2] // 2]
+        for i in range(9):
+            preview = np.ndarray((dimensions[0], dimensions[1], 3), dtype=np.uint8)
+            tf = data[i]["transfer_function"]
+            for ix in range(dimensions[0]):
+                for iy in range(dimensions[1]):
+                    pixel = slice[ix, iy]
+                    r = int(tf[pixel]["color"]["r"] * 255)
+                    g = int(tf[pixel]["color"]["g"] * 255)
+                    b = int(tf[pixel]["color"]["b"] * 255)
+                    a = int(tf[pixel]["color"]["a"] * 255)
+                    if a > 0:
+                        preview[ix, iy, :] = [b, g, r] 
+                    else:
+                        preview[ix, iy, :] = [0, 0, 0] 
+            preview = cv2.resize(preview, (90, 90))
+            cv2.imwrite("temp/tf{}_preview.png".format(i), preview)
