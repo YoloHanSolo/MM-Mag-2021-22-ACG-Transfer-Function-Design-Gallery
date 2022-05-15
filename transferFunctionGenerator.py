@@ -9,65 +9,88 @@ class TransferFunctionGenerator:
         self.max_opacity = max_opacity
         self.min_value = min_value
 
-        self.bins = None  # range 3 -> 30
-        self.dropout = None  # range 0.0 -> 0.3
-        self.power = None  # power 2 -> 10
-        self.feature_vector = None    
+        # range 3 -> 30
+        # range 0.0 -> 0.3
+        # power 2 -> 10
 
     def exploreTransferFunctions(self, feature_vector):
-        print(feature_vector)
 
-        seeds = [feature_vector[3]]
-        data = [self.generateRandomTransferFunction(feature_vector[0], feature_vector[3])]
+        origin_bins = feature_vector["bins"]
+        origin_dropout = feature_vector["dropout"]
+        origin_power = feature_vector["power"]
+        origin_level = feature_vector["level"]
+        origin_seed = feature_vector["seed"]
 
+        random.seed(origin_seed)
+        origin_tf = self.generateRandomTransferFunction(origin_bins, origin_dropout, origin_power, origin_level, origin_seed)
+
+        seeds = []
         for _ in range(8):
             seeds.append(random.randint(0, 255))
-        
-        for index in range(1, 9): 
-            data.append(
-                self.generateRandomTransferFunction(bins, seeds[index]))
+
+        data = [origin_tf]
+        for index in range(8):
+            seed = seeds[index]
+            random.seed(seed)
+            bins = origin_bins + random.randint(-10 // origin_level, 10 // origin_level)
+            bins = max(2, min(30, bins))
+            dropout = origin_dropout + random.uniform(-0.1, 0.1)
+            dropout = max(0.0, min(0.5, dropout))
+            power = origin_power + random.randint(-4 // origin_level, 4 // origin_level) * 2
+            dropout = max(0.0, min(0.5, dropout))
+            level = origin_level + 1
+            random.seed(seed)
+            explore_tf = self.generateRandomTransferFunction(bins, dropout, power, level, seed)   
+            data.append(explore_tf)
         return data
 
     def generateInitialTransferFunctions(self):
         seeds = []
         for _ in range(9):
             seeds.append(random.randint(0, 255))
+
         data = []
-        for index, bins in enumerate(range(3, 30, 3)):   
-            data.append(
-                self.generateRandomTransferFunction(bins, seeds[index]))
+        for index, bins in enumerate(range(3, 30, 3)): 
+            seed = seeds[index]
+            random.seed(seed) 
+            dropout = random.uniform(0.0, 0.3)
+            power = random.randint(1, 5) * 2
+            level = 1   
+            random.seed(seed)   
+            random_tf = self.generateRandomTransferFunction(bins, dropout, power, level, seed)
+            data.append(random_tf)
         return data
 
-    def generateRandomTransferFunction(self, bins, seed):
-        random.seed(seed)
-        self.bins = bins 
-        self.dropout = random.uniform(0.0, 0.3)
-        self.power = random.randint(1, 5) * 2
+    def generateRandomTransferFunction(self, bins, dropout, power, level, seed):
 
-        self.feature_vector = [
-            self.bins,
-            self.dropout,
-            self.power,
-            seed,
-            0 # level
-        ]
-
-        print(self.feature_vector)
+        feature_vector = {
+            "bins": bins,
+            "dropout": dropout,
+            "power": power,
+            "level": level,
+            "seed": seed
+        }
 
         transfer_function = {}
 
-        step = 256 / self.bins
-        for bin_index in range(self.bins):
+        step = 256 / bins
+        prev_bin_dropout = False
+        for bin_index in range(bins):
             edge_min = int(step * bin_index)
             edge_max = int(step * (bin_index + 1))
             x = (edge_min + edge_max) / 2
-            # COLOR 
+
             rgb = self.HSV2RGB(
                 self._getHue(), 
                 self._getSaturation(), 
-                self._getValue(x))
-            alpha = self._getOpacity(x, bin_index)
-            # TF BIN
+                self._getValue(x, power))
+            alpha = self._getOpacity(x, bin_index, power, dropout, prev_bin_dropout)
+
+            if alpha == 0:
+                prev_bin_dropout = True
+            else:
+                prev_bin_dropout = False
+
             transfer_function[bin_index] = {
                 "edge_min": edge_min,
                 "edge_max": edge_max,
@@ -75,7 +98,7 @@ class TransferFunctionGenerator:
                 "alpha": alpha }
 
         vpt_tf_json = []
-        for bin_index in range(self.bins):
+        for bin_index in range(bins):
             tf_bin = transfer_function[bin_index]
             edge_min = tf_bin["edge_min"]
             edge_max = tf_bin["edge_max"]
@@ -88,7 +111,7 @@ class TransferFunctionGenerator:
                 vpt_tf_json.append(vpt_bump)          
 
         tf = {
-            "feature_vector": self.feature_vector,
+            "feature_vector": feature_vector,
             "transfer_function": vpt_tf_json
         }
 
@@ -117,13 +140,13 @@ class TransferFunctionGenerator:
     def _getHue(self):
         return random.randint(0, 255)
 
-    def _getValue(self, x):
-        fx = (((x / 255) - 1) ** self.power) * 255
+    def _getValue(self, x, power):
+        fx = (((x / 255) - 1) ** power) * 255
         return max(fx, 100)
 
-    def _getOpacity(self, x, bin_index):
-        fx = ((x / 255) ** self.power) * 255
-        if random.uniform(0, 1) < self.dropout:
+    def _getOpacity(self, x, bin_index, power, dropout, prev_bin_dropout):
+        fx = ((x / 255) ** power) * 255
+        if random.uniform(0, 1) < dropout and not prev_bin_dropout:
             return 0
         elif bin_index == 0 or x <= 0.05: # IGNORE BACKGROUND NOISE
             return 0
