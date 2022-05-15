@@ -14,7 +14,8 @@ allow “browsing” through variations of the currently applied transfer functi
 The transfer function recommendations should be presented to the user in the form of small low-resolution
 previews. The user should be able to adjust and fine-tune the resulting transfer function.
 
-![Design Galleries: A General Approach to Setting Parameters for Computer Graphics and Animation, January 1997](./resources/design_gallery.PNG "Design gallery")
+![](./resources/design_gallery.PNG "Design gallery")
+Image is taken from - Design Galleries: A General Approach to Setting Parameters for Computer Graphics and Animation, January 1997
 
 ## Implementation
 
