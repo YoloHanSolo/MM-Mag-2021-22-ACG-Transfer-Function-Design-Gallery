@@ -1,8 +1,11 @@
 # Transfer Function Design Gallery
 
 This project is part of course Advanced Computer Grpahics, Faculty of Computer and Information Science of the University of Ljubljana, May 2022.
+
 Author: Jan Pelicon
+
 Menthor: Žiga Lesar
+
 Course holder: prof. dr. Matija Marolt
 
 ## Instructions
@@ -15,7 +18,10 @@ The transfer function recommendations should be presented to the user in the for
 previews. The user should be able to adjust and fine-tune the resulting transfer function.
 
 ![](./resources/design_gallery.PNG "Design gallery")
-Image is taken from - Design Galleries: A General Approach to Setting Parameters for Computer Graphics and Animation, January 1997
+
+Image is taken from:
+
+Design Galleries: A General Approach to Setting Parameters for Computer Graphics and Animation, January 1997
 
 ## Implementation
 
