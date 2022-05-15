@@ -5,7 +5,7 @@ import cv2
 class TransferFunctionGenerator:
 
     def __init__(self, filename, max_opacity = 0.3, min_value = 100):
-        self.path = "raw/" + filename
+        self.path = "demo_volumes/" + filename
         self.max_opacity = max_opacity
         self.min_value = min_value
 
