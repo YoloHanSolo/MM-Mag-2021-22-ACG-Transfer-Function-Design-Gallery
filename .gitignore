@@ -1,4 +1,5 @@
-vpt
 raw
 *.pyc
 temp/*.png
+node_modules
+__pycache__

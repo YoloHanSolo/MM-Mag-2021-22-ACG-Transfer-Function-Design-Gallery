@@ -1,0 +1,4 @@
+.panel.scrollable {
+    height: 100%;
+    overflow: auto;
+}

@@ -1,0 +1,40 @@
+{
+    "input": [
+        {
+            "input": "src",
+            "output": "/static",
+            "filter": "\\.(js|html|css|json)$",
+            "recursive": true
+        },
+        {
+            "input": "src",
+            "output": "/",
+            "filter": "\\.(glsl)$",
+            "recursive": true,
+            "parse": true
+        },
+        {
+            "input": "src/images",
+            "output": "/static/images",
+            "recursive": true
+        }
+    ],
+    "transform": [],
+    "output": [
+        {
+            "input": "/static",
+            "output": "build",
+            "mode": "each"
+        },
+        {
+            "input": "/glsl/shaders",
+            "output": "build/shaders.json",
+            "mode": "json"
+        },
+        {
+            "input": "/glsl/mixins",
+            "output": "build/mixins.json",
+            "mode": "json"
+        }
+    ]
+}
