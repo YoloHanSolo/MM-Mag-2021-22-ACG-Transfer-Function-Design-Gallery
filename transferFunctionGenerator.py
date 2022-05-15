@@ -14,6 +14,20 @@ class TransferFunctionGenerator:
         self.power = None  # power 2 -> 10
         self.feature_vector = None    
 
+    def exploreTransferFunctions(self, feature_vector):
+        print(feature_vector)
+
+        seeds = [feature_vector[3]]
+        data = [self.generateRandomTransferFunction(feature_vector[0], feature_vector[3])]
+
+        for _ in range(8):
+            seeds.append(random.randint(0, 255))
+        
+        for index in range(1, 9): 
+            data.append(
+                self.generateRandomTransferFunction(bins, seeds[index]))
+        return data
+
     def generateInitialTransferFunctions(self):
         seeds = []
         for _ in range(9):
@@ -33,7 +47,12 @@ class TransferFunctionGenerator:
         self.feature_vector = [
             self.bins,
             self.dropout,
-            self.power]
+            self.power,
+            seed,
+            0 # level
+        ]
+
+        print(self.feature_vector)
 
         transfer_function = {}
 
@@ -69,7 +88,7 @@ class TransferFunctionGenerator:
                 vpt_tf_json.append(vpt_bump)          
 
         tf = {
-            "feature": self.feature_vector,
+            "feature_vector": self.feature_vector,
             "transfer_function": vpt_tf_json
         }
 

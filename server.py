@@ -13,18 +13,24 @@ def responseHandler(data):
     return response
 
 def parsePostData(data):
-    return json.loads(data.decode())["filename"]
+    return json.loads(data.decode())
 
 @app.route("/explore-tf", methods = ['POST'])
 @cross_origin()
 def postExploreTF():
-    data = {}
+    data = parsePostData(request.data)
+    filename = data["filename"]
+    feature_vector = data["feature_vector"]
+    TFG = TransferFunctionGenerator(filename)
+    data = TFG.exploreTransferFunctions(feature_vector)
+    TFG.generateTransferFunctionsPreview(data)
     return responseHandler(data)
 
 @app.route("/random-tf", methods = ['POST'])
 @cross_origin()
-def postGenerateRandomTF():
-    filename = parsePostData(request.data)
+def postRandomTF():
+    data = parsePostData(request.data)
+    filename = data["filename"]
     TFG = TransferFunctionGenerator(filename)
     data = TFG.generateInitialTransferFunctions()
     TFG.generateTransferFunctionsPreview(data)
